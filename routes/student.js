@@ -1220,8 +1220,17 @@ router.post('/ScanData',middlewares.getUserInfo, async (req, res) => {
 
 			// 	}).catch((error) => { console.log('**********error.message***************', error.message) });
 			// } else {
-				var uploadDocuments = await functions.uploadDocuments(user_id, type, imageLocationToCallClient);
-				console.log('uploadDocuments.id' ,uploadDocuments.id)
+				if(type == 'paymentIssue'){
+				alldata.push(imageLocationToCallClient);
+				if(alldata){
+					res.json({
+						status: 200,
+						data: alldata
+					})
+				}else{res.json({status : 400})}
+				
+				}else{
+					var uploadDocuments = await functions.uploadDocuments(user_id, type, imageLocationToCallClient);
 				alldata.push(uploadDocuments.id);
 				if(uploadDocuments){
 					res.json({
@@ -1230,6 +1239,7 @@ router.post('/ScanData',middlewares.getUserInfo, async (req, res) => {
 					})
 				}else{res.json({status : 400})}
 				
+				}
 			// }
 
 		});
@@ -2947,7 +2957,7 @@ router.get('/getUploadeddocument_student',middlewares.getUserInfo,async function
 					'CollegeName': college ? college.name : 'null',
 					'filePath': constant.FILE_LOCATION + 'public/upload/' + 'marklist' + '/' + user_id + '/' + marksheet[i].file_name,
 					'fileName': marksheet[i].file_name,
-					'extension': marksheet[i].file_name.split('.').pop(),
+					'extension':marksheet[i].file_name ? marksheet[i].file_name.split('.').pop(): 'null',
 					'id': marksheet[i].id,
 					'user_id': marksheet[i].user_id,
 					'app_id': marksheet[i].app_id,
@@ -2974,7 +2984,7 @@ router.get('/getUploadeddocument_student',middlewares.getUserInfo,async function
 							'CollegeName': college ? college.name : 'null',
 							'filePath': constant.FILE_LOCATION + 'public/upload/' + 'transcript' + '/' + user_id + '/' + transcript[i].file_name,
 							'fileName': transcript[i].file_name,
-							'extension': transcript[i].file_name.split('.').pop(),
+							'extension': transcript[i].file_name ? transcript[i].file_name.split('.').pop() : 'null',
 							'id': transcript[i].id,
 							'user_id': transcript[i].user_id,
 							'app_id': transcript[i].app_id,
@@ -2995,7 +3005,7 @@ router.get('/getUploadeddocument_student',middlewares.getUserInfo,async function
 						'CollegeName': college ? college.name : 'null',
 						'filePath': constant.FILE_LOCATION + 'public/upload/' + 'curriculum' + '/' + user_id + '/' + curriculum[i].file_name,
 						'fileName': curriculum[i].file_name,
-						'extension': curriculum[i].file_name.split('.').pop(),
+						'extension':curriculum[i].file_name ? curriculum[i].file_name.split('.').pop() : 'null',
 						'id': curriculum[i].id,
 						'user_id': curriculum[i].user_id,
 						'app_id': curriculum[i].app_id,
@@ -3018,7 +3028,7 @@ router.get('/getUploadeddocument_student',middlewares.getUserInfo,async function
 						'CollegeName': college ? college.name : 'null',
 						'filePath': constant.FILE_LOCATION + 'public/upload/' + 'gradtoper' + '/' + user_id + '/' + gradtoper[i].file_name,
 						'fileName': gradtoper[i].file_name,
-						'extension': gradtoper[i].file_name.split('.').pop(),
+						'extension': gradtoper[i].file_name ? gradtoper[i].file_name.split('.').pop() : 'null',
 						'id': gradtoper[i].id,
 						'user_id': gradtoper[i].user_id,
 						'app_id': gradtoper[i].app_id,
@@ -3046,7 +3056,7 @@ router.get('/getUploadeddocument_student',middlewares.getUserInfo,async function
 						'name': extra[i].name,
 						'filePath': constant.FILE_LOCATION + 'public/upload/' + 'extra' + '/' + user_id + '/' + extra[i].file_name,
 						'fileName': extra[i].file_name,
-						'extension': extra[i].file_name.split('.').pop(),
+						'extension': extra[i].file_name ? extra[i].file_name.split('.').pop() : 'null',
 						'id': extra[i].id,
 						'user_id': extra[i].user_id,
 						'app_id': extra[i].app_id,
@@ -3485,37 +3495,14 @@ router.get('/captcha', function (req, res) {
 router.post('/savePaymentIssueData',middlewares.getUserInfo, async (req, res) => {
 	try {
 		var user_id = req.User.id;
-		var values = req.query.data;
+		var values = req.body.data;
 		var type = 'paymentIssue'
-		var dir = constant.FILE_LOCATION + "public/upload/" + type + '/' + user_id;
-		var image;
 		var Date = moment(values.paymentdateCtrl).format('DD/MM/YYYY');
 
-		if (!fs.existsSync(dir)) {
-			fs.mkdirSync(dir);
-		}
-		var storage = multer.diskStorage({
-			destination: function (req, file, callback) {
-				callback(null, constant.FILE_LOCATION + "public/upload/" + type + '/' + user_id);
-			},
-			filename: function (req, file, callback) {
-				console.log('file.originalname', file.originalname)
-				var extension = path.extname(file.originalname)
-				var randomString = functions.generateRandomString(10, 'alphabetic')
-				var newFileName = randomString.concat(extension);
-				image = newFileName;
-				callback(null, newFileName);
-			}
-		});
 
-		var upload = multer({
-			storage: storage,
-		}).single('file');
-		upload(req, res, async function (err, data) {
-			imageLocationToCallClient = image;
 			const userCreated = await models.paymenterror_details.create({
 				user_id: user_id,
-				file_name: imageLocationToCallClient,
+				file_name: values.filename,
 				email: values.emailCtrl,
 				transaction_id: values.transactionCtrl,
 				date: Date,
@@ -3529,7 +3516,6 @@ router.post('/savePaymentIssueData',middlewares.getUserInfo, async (req, res) =>
 			if (userCreated) {
 				res.json({ status: 200 })
 			}
-		});
 	} catch (err) {
 		console.error(err);
 		return res.status(500).json({
@@ -3550,7 +3536,6 @@ router.get('/getPaymentIssueData', middlewares.getUserInfo, async (req, res) => 
 	var payerror = [];
 	try {
 		if (user_type == 'student') {
-			console.log('///////////////////');
 			var user = await models.paymenterror_details.findAll({
 				where: {
 					user_id: userId,
@@ -3587,7 +3572,6 @@ router.get('/getPaymentIssueData', middlewares.getUserInfo, async (req, res) => 
 				});
 			}
 		} else {
-			console.log('!!!!!!!!!!!!!!!!!!');
 			var user = await models.paymenterror_details.findAll({
 				where:{
 					tracker: tracker,
@@ -3624,7 +3608,6 @@ router.get('/getPaymentIssueData', middlewares.getUserInfo, async (req, res) => 
 				});
 			}
 		}
-		console.log('///////////////////',payerror);
 
 		if(payerror.length > 0){
 			res.json({
