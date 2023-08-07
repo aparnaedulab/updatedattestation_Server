@@ -1297,7 +1297,7 @@ router.get('/getletterDetails',middlewares.getUserInfo, async (req, res) => {
 	try {
 		const userId = req.User.id;
 		// const appId = req.query.app_id;
-		const degreeValue = req.query.degrees;
+		const degreeValue = 'Bachelors,Masters,Phd';
 		var degreeVal = degreeValue.split(",");
 		const educationDetailsInstructional = {
 			bachelors: [],
@@ -2557,7 +2557,7 @@ router.post('/saveInstructionalData',middlewares.getUserInfo, upload.none(), asy
 		const specialization = req.body.specialization;
 		const division = req.body.division;
 		const duration = req.body.duration;
-		const yearOfpassing = req.body.yearOfpassing;
+		const yearOfpassing = req.body.yearOfPassing;
 		const education = req.body.education
 		const user_id = req.User.id;
 		const faculty = course.split(' of ')[1];
@@ -2581,7 +2581,7 @@ router.post('/saveInstructionalData',middlewares.getUserInfo, upload.none(), asy
 				faculty: faculty,
 				type: type
 			})
-			res.json({
+			return res.json({
 				status: 200,
 				message: 'Data Updated successfully!!!'
 			});
@@ -2599,7 +2599,7 @@ router.post('/saveInstructionalData',middlewares.getUserInfo, upload.none(), asy
 				faculty: faculty,
 				type: type
 			})
-			res.json({
+			return res.json({
 				status: 200,
 				message: 'Data saved successfully!!!'
 			});
@@ -2846,55 +2846,14 @@ router.delete('/deleteDocument', async (req, res) => {
  * Delete the form of user based on parameters passed in the API request
  * @param {String} info_type - Type of the Form document
  * @param {Integer} userId - userId of the Form document
+ * @param {Integer} doc_id - Id of the Document
  */
 router.delete('/deleteInfo',middlewares.getUserInfo, async (req, res) => {
 	try {
 		const userId = req.User.id;
 		const info_type = req.query.type;
-		if (info_type == 'Instructional') {
-			try {
-				const instructional = await models.InstructionalDetails.findOne({
-					where: {
-						userId: userId
-					}
-				})
-				if (instructional) {
-					const data = await instructional.destroy();
-
-					if (data) {
-						return res.json({
-							status: 200
-						})
-					}
-				}
-			} catch (error) {
-				return res.json({
-					status: 500,
-					message: 'An error occurred while updating GradeToPercentageLetter.'
-				});
-			}
-		} else if (info_type == 'Affiliation') {
-			try {
-				const affiliation = await models.Affiliation_Letter.findOne({
-					where: {
-						user_id: userId
-					}
-				})
-				if (affiliation) {
-					const data = await affiliation.destroy();
-					if (data) {
-						return res.json({
-							status: 200
-						})
-					}
-				}
-			} catch (error) {
-				return res.json({
-					status: 500,
-					message: 'An error occurred while updating Affiliation_Letter.'
-				})
-			}
-		} else if (info_type == 'NameChangeletter') {
+		const doc_id = req.query.id;    
+		 if (info_type == 'NameChangeletter') {
 			try {
 				const letter = await models.Letterfor_NameChange.findOne({
 					where: {
@@ -2916,7 +2875,31 @@ router.delete('/deleteInfo',middlewares.getUserInfo, async (req, res) => {
 				})
 			}
 
-		}
+		}else { 
+				try {
+					const instructional = await models.letter_details.findOne({
+						where: {
+							user_id: userId,
+							id:doc_id,
+							type:info_type
+						}
+					})
+					if (instructional) { 
+						const data = await instructional.destroy();
+	
+						if (data) { 
+							return res.json({
+								status: 200
+							})
+						}
+					}
+				} catch (error) {
+					return res.json({
+						status: 500,
+						message: 'An error occurred while deleting Your Data.'
+					});
+				}
+			} 
 	} catch (error) {
 		console.error("Error in /deleteInfo", error);
 		return res.json({
@@ -3347,7 +3330,8 @@ router.get('/checkstepper_inner',middlewares.getUserInfo, async function (req, r
 						callback(null, appliedFor);
 					}
 				} else {
-					obj_inner['tab3'] = false
+					obj_inner['tab3']= true;
+					count = count + 1;
 					callback(null, appliedFor);
 				}
 			},
@@ -3364,7 +3348,8 @@ router.get('/checkstepper_inner',middlewares.getUserInfo, async function (req, r
 						callback(null, appliedFor);
 					}
 				} else {
-					obj_inner['tab4'] = false
+					obj_inner['tab4']= true;
+					count = count + 1;
 					callback(null, appliedFor);
 				}
 			},
@@ -3381,7 +3366,8 @@ router.get('/checkstepper_inner',middlewares.getUserInfo, async function (req, r
 						callback(null, appliedFor);
 					}
 				} else {
-					obj_inner['tab5'] = false
+					obj_inner['tab5'] = true;
+					count = count + 1;
 					callback(null, appliedFor);
 				}
 			},
@@ -3398,7 +3384,8 @@ router.get('/checkstepper_inner',middlewares.getUserInfo, async function (req, r
 						callback(null, appliedFor);
 					}
 				} else {
-					obj_inner['tab6'] = false
+					obj_inner['tab6'] = true;
+					count = count + 1;
 					callback(null, appliedFor);
 				}
 			},
@@ -3415,7 +3402,8 @@ router.get('/checkstepper_inner',middlewares.getUserInfo, async function (req, r
 						callback(null, appliedFor);
 					}
 				} else {
-					obj_inner['tab7'] = false
+					obj_inner['tab7'] = true;
+					count = count + 1;
 					callback(null, appliedFor);
 				}
 			},
@@ -3432,7 +3420,8 @@ router.get('/checkstepper_inner',middlewares.getUserInfo, async function (req, r
 						callback(null, appliedFor);
 					}
 				} else {
-					obj_inner['tab8'] = false
+					obj_inner['tab8']= true;
+					count = count + 1;
 					callback(null, appliedFor);
 				}
 			},
@@ -3898,8 +3887,7 @@ router.get('/getNotification',middlewares.getUserInfo, async (req,res) => {
 		 where:{
 			user_id:userId,
 		 }
-	 }) 
-	 console.log("data",notification[0].dataValues.created_at);
+	 })  
 	 const notificationsWithTimeAgo = notification.map((item) => {
 		 const createdAt = item.dataValues.created_at;
 		 const timeAgo = moment(createdAt).fromNow(); // Calculate the time difference
