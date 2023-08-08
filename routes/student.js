@@ -161,22 +161,27 @@ router.post('/register', async (req, res) => {
 /* Author : Prathmesh Pawar
 Route : educationalDetails - create & update educational details of step 1.
 Paramater : formdata and user_id of student */
-router.post('/educationalDetails', middlewares.getUserInfo, async (req, res) => {
-	console.log("/educationalDetails");
+router.post('/educationalDetails', middlewares.getUserInfo, async (req, res) => { 
 
 	var user_id = req.User.id;
 	var degree = req.body.degree;
+	const appliedData = req.body.formdata;
+	const userEmail = req.User.email;
+	const appliedValue = Object.keys(appliedData).filter(key => appliedData[key]);
 	app_id = req.body.app_id;
 	if (app_id == 'null' || app_id == null || app_id == undefined || app_id == 'undefined' || app_id == '') {
 		app_id = null
 	} else {
 		app_id = req.query.app_id
 	}
-
 	var applied_for_details = await functions.getAppliedForDetails(user_id, app_id);
 	if (applied_for_details) {
 		var updatedAppliedDetails = await functions.getUpdatedEducationalDetails(user_id, req.body.formdata, degree);
 		if (updatedAppliedDetails) {
+			/**Activity Tracker */
+			let data = userEmail + " was Attested For " + appliedValue;
+			let activity = "Attested For";
+			functions.activitylog(user_id, '', activity, data, req);
 			res.json({
 				status: 200,
 				message: "updated"
@@ -186,6 +191,10 @@ router.post('/educationalDetails', middlewares.getUserInfo, async (req, res) => 
 	else {
 		var createdAppliedDetails = await functions.getCreateEducationalDetails(user_id, req.body.formdata, degree);
 		if (createdAppliedDetails) {
+			/**Activity Tracker */
+			let data = userEmail + " was Attested For " + appliedValue;
+			let activity = "Attested For";
+			functions.activitylog(user_id, '', activity, data, req);;
 			res.json({
 				status: 200,
 				message: "added"
@@ -237,7 +246,7 @@ router.post('/updateAllInstitute',middlewares.getUserInfo, async (req, res) => {
 	var institute_id = req.body.institute_id;
 	var function_type = req.body.function_type;
 	var admin_id = req.body.admin_id;
-	var user_email = req.body.user_email;
+	var user_email = req.User.email;
 	var user_type = req.body.user_type;
 
 	var applied = await functions.getEducationalDetailsCount(user_id, app_id);
@@ -276,10 +285,10 @@ router.post('/updateAllInstitute',middlewares.getUserInfo, async (req, res) => {
 		var createInstitute = await functions.getCreateInstitution(formData, emailArr, user_id, type, app_id, anotherEmailArr, anotherEmail);
 
 		if (createInstitute) {
-			var data = type + ' Created by ' + user_email;
-			var activity = "Create purpose";
-
-			functions.getCreateActivityTracker(user_id, app_id, activity, data);
+             /**Activity Tracker */
+			let data = type + ' Purpose Created by ' + user_email;
+			let activity = "Purpose Created";
+			functions.activitylog(user_id,app_id, activity, data, req);
 
 			res.json({
 				status: 200,
@@ -298,16 +307,16 @@ router.post('/updateAllInstitute',middlewares.getUserInfo, async (req, res) => {
 			var updateInstitute = await functions.getUpdateInstitution(formData, emailArr, user_id, type, app_id, anotherEmailArr, anotherEmail, institute_id);
 
 			if (updateInstitute == true) {
-				if (user_type == 'student') {
-					var data = type + ' updated by ' + user_email;
-					var activity = "Update purpose";
-
-					functions.getCreateActivityTracker(user_id, app_id, activity, data);
-				} else {
-					var data = type + ' updated by ' + user_email;
-					var activity = "Update purpose";
-
-					functions.getCreateActivityTracker(user_id, app_id, activity, data);
+				if (user_type == 'student') { 
+					/**Activity Tracker */
+					let data = type + ' Purpose Updated by ' + user_email;
+					let activity = "Purpose Updated";
+					functions.activitylog(user_id,app_id, activity, data, req);
+				} else { 
+					/**Activity Tracker */
+					let data = type + ' Purpose Updated by ' + user_email;
+					let activity = "Purpose Updated";
+					functions.activitylog(user_id,app_id, activity, data, req);
 				}
 
 				res.json({
@@ -332,12 +341,12 @@ router.post('/updateAllInstitute',middlewares.getUserInfo, async (req, res) => {
 /* Author : Prathmesh Pawar
 Route : deleteInstituteHrd - delete both purpose records all institute as well as hrd.
 Paramater : institute_id, purpose_name and user_id of student */
-router.post('/deleteInstituteHrd', middlewares.getUserInfo, async (req, res) => {
-	console.log('/deleteInstitute');
+router.post('/deleteInstituteHrd', middlewares.getUserInfo, async (req, res) => { 
 
 	var institute_id = req.body.institute_id;
 	var purpose_name = req.body.purpose_name;
 	var user_id = req.User.id;
+	var userEmail = req.User.email;
 
 	if (purpose_name == 'HRD') {
 		var deleteHrd = await functions.getDeleteHrd(institute_id);
@@ -349,6 +358,10 @@ router.post('/deleteInstituteHrd', middlewares.getUserInfo, async (req, res) => 
 				var deleteHrdInstitute = await functions.getDeleteHrdInstitute(user_id, purpose_name);
 
 				if (deleteHrdInstitute) {
+					/**Activity Tracker */
+					let data = purpose_name + ' Details Deleted by ' + userEmail;
+					let activity = "HRD Deleted";
+					functions.activitylog(user_id, '', activity, data, req);
 					res.json({
 						status: 200,
 						message: purpose_name + " data deleted successfully!"
@@ -360,6 +373,10 @@ router.post('/deleteInstituteHrd', middlewares.getUserInfo, async (req, res) => 
 					})
 				}
 			} else {
+				/**Activity Tracker */
+				let data = purpose_name + ' Details Deleted by ' + userEmail;
+				let activity = "HRD Deleted";
+				functions.activitylog(user_id, '', activity, data, req);
 				res.json({
 					status: 200,
 					message: purpose_name + " data deleted successfully!"
@@ -372,11 +389,13 @@ router.post('/deleteInstituteHrd', middlewares.getUserInfo, async (req, res) => 
 			})
 		}
 	} else {
-		var deleteInstitute = await functions.getDeleteInstitution(institute_id);
-		console.log('deleteInstitute', deleteInstitute);
-		console.log('deleteInstitute', deleteInstitute.length);
+		var deleteInstitute = await functions.getDeleteInstitution(institute_id); 
 
 		if (deleteInstitute) {
+			/**Activity Tracker */
+			let data = purpose_name + ' Purpose Details Deleted by ' + userEmail;
+			let activity = "Purpose Deleted";
+			functions.activitylog(user_id, '', activity, data, req);
 			res.json({
 				status: 200,
 				message: purpose_name + " data deleted successfully!"
@@ -1100,6 +1119,7 @@ router.post('/ScanData',middlewares.getUserInfo, async (req, res) => {
 		var user_id = req.User.id;
 		var app_id = req.query.app_id;
 		var type = req.query.value;
+		const userEmail = req.User.email;
 		// var education_type = req.query.education_type;
 		// var collegeid = req.query.collegeid;
 		// var pattern = req.query.pattern;
@@ -1232,7 +1252,11 @@ router.post('/ScanData',middlewares.getUserInfo, async (req, res) => {
 				}else{
 					var uploadDocuments = await functions.uploadDocuments(user_id, type, imageLocationToCallClient);
 				alldata.push(uploadDocuments.id);
-				if(uploadDocuments){
+				if(uploadDocuments){  
+					/**Activity Tracker */
+					let data =  type +" Document ( "+imageLocationToCallClient +" ) was Uploaded by " + userEmail;
+					let activity = type +" Uploaded";
+					functions.activitylog(user_id,'', activity, data, req);
 					res.json({
 						status: 200,
 						data: alldata
@@ -2488,7 +2512,7 @@ router.post('/upload_letterforNameChange',middlewares.getUserInfo, async (req, r
 router.post('/saveLetterNameChangeData',middlewares.getUserInfo, async (req, res) => {
 	try {
 		const userId = req.User.id;
-
+        const userEmail = req.User.email;
 		const user = await models.Letterfor_NameChange.findOne({
 			where: {
 				user_id: userId,
@@ -2507,7 +2531,10 @@ router.post('/saveLetterNameChangeData',middlewares.getUserInfo, async (req, res
 				lastnameasperpassport: req.body.data.lastNamePassportCtrl,
 				type: 'Passport'
 			});
-
+			/**Activity Tracker */
+			let data =  "Letter for Name Change Letter updated by " + userEmail;
+			let activity = "Name Change Letter Updated";
+			functions.activitylog(userId,'', activity, data, req);
 			res.json({
 				status: 200,
 				message: 'Data saved successfully!!!'
@@ -2527,6 +2554,10 @@ router.post('/saveLetterNameChangeData',middlewares.getUserInfo, async (req, res
 			});
 
 			if (userCreated) {
+				/**Activity Tracker */
+				let data =  "Letter for Name Change Letter created by " + userEmail;
+				let activity = "Name Change Letter Created";
+				functions.activitylog(userId,'', activity, data, req);
 				res.json({
 					status: 200,
 					message: 'Data saved successfully!!!'
@@ -2559,9 +2590,10 @@ router.post('/saveInstructionalData',middlewares.getUserInfo, upload.none(), asy
 		const duration = req.body.duration;
 		const yearOfpassing = req.body.yearOfPassing;
 		const education = req.body.education
-		const user_id = req.User.id;
+		const userId = req.User.id;
 		const faculty = course.split(' of ')[1];
 		const type = req.body.type;
+		const userEmail = req.User.email;
 		const user = await models.letter_details.findOne({
 			where: {
 				id: doc_id
@@ -2569,7 +2601,7 @@ router.post('/saveInstructionalData',middlewares.getUserInfo, upload.none(), asy
 		})
 		if (user) {
 			await user.update({
-				user_d: user_id,
+				user_id: userId,
 				studentName: name,
 				courseName: course,
 				collegeName: college,
@@ -2581,13 +2613,17 @@ router.post('/saveInstructionalData',middlewares.getUserInfo, upload.none(), asy
 				faculty: faculty,
 				type: type
 			})
+			/**Activity Tracker */
+			let data =   type + " letter details Updated by " + userEmail;
+			let activity = type + " letter Updated";
+			functions.activitylog(userId,'', activity, data, req);
 			return res.json({
 				status: 200,
 				message: 'Data Updated successfully!!!'
 			});
 		} else {
 			await models.letter_details.create({
-				user_id: user_id,
+				user_id: userId,
 				studentName: name,
 				courseName: course,
 				collegeName: college,
@@ -2599,6 +2635,10 @@ router.post('/saveInstructionalData',middlewares.getUserInfo, upload.none(), asy
 				faculty: faculty,
 				type: type
 			})
+			/**Activity Tracker */
+			let data = type + " letter details Created by " + userEmail;
+			let activity = type + " letter Created";
+			functions.activitylog(userId,'', activity, data, req);
 			return res.json({
 				status: 200,
 				message: 'Data saved successfully!!!'
@@ -2621,11 +2661,13 @@ router.post('/saveInstructionalData',middlewares.getUserInfo, upload.none(), asy
  * @param {String} doc_type - Type of the document
  * @param {Integer} doc_id - Id of the document
  */
-router.delete('/deleteDocument', async (req, res) => {
+router.delete('/deleteDocument',middlewares.getUserInfo, async (req, res) => { 
 	try {
 		const doc_id = req.query.id;
 		const doc_type = req.query.type;
-		if (doc_type == 'gradToPer') {
+		const userEmail = req.User.email;
+		const userId = req.User.id;
+		if (doc_type == 'gradToPer') { 
 			try {
 				const letter = await models.GradeToPercentageLetter.findOne({
 					where: {
@@ -2635,6 +2677,10 @@ router.delete('/deleteDocument', async (req, res) => {
 				if (letter) {
 					const letterDelete = await letter.destroy()
 					if (letterDelete) {
+						/**Activity Tracker */ 
+						let data =  "Grade to Percentage letter Document ( "+letter.file_name+" ) Deleted by " + userEmail;
+						let activity = "gradeToPer Deleted";
+						functions.activitylog(userId,'', activity, data, req);
 						return res.json({
 							status: 200,
 							data: letterDelete
@@ -2662,6 +2708,10 @@ router.delete('/deleteDocument', async (req, res) => {
 				if (file) {
 					const fileDelete = await file.destroy()
 					if (fileDelete) {
+						/**Activity Tracker */
+						let data =  "ExtraDocument ( "+file.file_name+" ) Deleted by " + userEmail;
+						let activity = "ExtraDocument Deleted";
+						functions.activitylog(userId,'', activity, data, req);
 						return res.json({
 							status: 200,
 							data: fileDelete
@@ -2689,6 +2739,10 @@ router.delete('/deleteDocument', async (req, res) => {
 				if (file) {
 					const fileDelete = await file.destroy()
 					if (fileDelete) {
+						/**Activity Tracker */
+						let data =  "Marksheet Document ( "+file.file_name+" ) Deleted by " + userEmail;
+						let activity = "Marksheet Deleted";
+						functions.activitylog(userId,'', activity, data, req);
 						return res.json({
 							status: 200,
 							data: fileDelete
@@ -2716,6 +2770,10 @@ router.delete('/deleteDocument', async (req, res) => {
 				if (file) {
 					const fileDelete = await file.destroy()
 					if (fileDelete) {
+						/**Activity Tracker */
+						let data =  "Transcript Letter Document ( "+file.file_name+" ) Deleted by " + userEmail;
+						let activity = "Transcript Deleted";
+						functions.activitylog(userId,'', activity, data, req);
 						return res.json({
 							status: 200,
 							data: fileDelete
@@ -2743,6 +2801,10 @@ router.delete('/deleteDocument', async (req, res) => {
 				if (file) {
 					const fileDelete = await file.destroy()
 					if (fileDelete) {
+						/**Activity Tracker */
+						let data =  "Curriculum Letter Document ( "+file.file_name+" ) Deleted by " + userEmail;
+						let activity = "Curriculum Deleted";
+						functions.activitylog(userId,'', activity, data, req);
 						return res.json({
 							status: 200,
 							data: fileDelete
@@ -2770,6 +2832,10 @@ router.delete('/deleteDocument', async (req, res) => {
 				if (file) {
 					const fileDelete = await file.destroy()
 					if (fileDelete) {
+						/**Activity Tracker */
+						let data =  "Competency Letter Document ( "+file.file_name+" ) Deleted by " + userEmail;
+						let activity = "Competency Deleted";
+						functions.activitylog(userId,'', activity, data, req);
 						return res.json({
 							status: 200,
 							data: fileDelete
@@ -2800,6 +2866,10 @@ router.delete('/deleteDocument', async (req, res) => {
 						name: null
 					});
 					if (del) {
+						/**Activity Tracker */
+						let data =  "Letter for Name Change Document ( "+file.file_name+" ) Deleted by " + userEmail;
+						let activity = "NameChangeDocument Deleted";
+						functions.activitylog(userId,'', activity, data, req);
 						return res.json({
 							status: 200,
 						});
@@ -2821,6 +2891,10 @@ router.delete('/deleteDocument', async (req, res) => {
 				if (user) {
 					const data = await user.destroy()
 					if (data) {
+						/**Activity Tracker */
+						let data =  "Payment Issue Document ( "+file.file_name+" ) Deleted by " + userEmail;
+						let activity = "PaymentIssue Deleted";
+						functions.activitylog(userId,'', activity, data, req);
 						res.json({
 							status: 200,
 						})
@@ -2852,7 +2926,8 @@ router.delete('/deleteInfo',middlewares.getUserInfo, async (req, res) => {
 	try {
 		const userId = req.User.id;
 		const info_type = req.query.type;
-		const doc_id = req.query.id;    
+		const doc_id = req.query.id; 
+		const userEmail = req.User.email;   
 		 if (info_type == 'NameChangeletter') {
 			try {
 				const letter = await models.Letterfor_NameChange.findOne({
@@ -2863,6 +2938,10 @@ router.delete('/deleteInfo',middlewares.getUserInfo, async (req, res) => {
 				if (letter) {
 					const data = await letter.destroy();
 					if (data) {
+						/**Activity Tracker */
+						let data = info_type + " details Deleted by " + userEmail;
+						let activity = info_type + " Deleted";
+						functions.activitylog(userId,'', activity, data, req);
 						return res.json({
 							status: 200
 						})
@@ -2886,11 +2965,14 @@ router.delete('/deleteInfo',middlewares.getUserInfo, async (req, res) => {
 					})
 					if (instructional) { 
 						const data = await instructional.destroy();
-	
-						if (data) { 
-							return res.json({
-								status: 200
-							})
+						if (data) {
+							/**Activity Tracker */
+							let data = info_type + " letter details Deleted by " + userEmail;
+							let activity = info_type + " letter Deleted";
+							functions.activitylog(userId,'', activity, data, req);   
+								return res.json({
+									status: 200
+								})  
 						}
 					}
 				} catch (error) {
@@ -3759,16 +3841,7 @@ router.get('/getProfileValue',middlewares.getUserInfo, async (req, res) => {
 		const view_data={};
 
 		const user = await functions.getUser(userId);
-		if(user){
-			const orders = await functions.getOrders(userId);
-
-			if(orders){
-				if(orders.length > 0){
-					view_data.amount_paid = true;
-				}else{
-					view_data.amount_paid = false;
-				}
-			}
+		if(user){ 
 			view_data.profile = user;
 			return res.json({
 				status:200,

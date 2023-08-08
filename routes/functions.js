@@ -383,52 +383,6 @@ module.exports = {
         }, { where: { id: id } })
     },
 
-    getCreateActivityTrackerChange: async (user_id, changed_by, changed_item, status, app_id) => {
-        console.log('djsdhdfhasiu', app_id);
-        return models.Activitytracker.create({
-            user_id: user_id,
-            activity: changed_item + ' ' + status,
-            data: changed_item + ' has ' + status + ' by ' + changed_by,
-            application_id: app_id ? app_id : null,
-        })
-    },
-
-    getCreateActivityTrackerDelete: async (user_id, deleted_by, deleted_item, app_id) => {
-        return models.Activitytracker.create({
-            user_id: user_id,
-            activity: deleted_item + ' deleted',
-            data: deleted_item + ' is deleted by ' + deleted_by,
-            application_id: app_id ? app_id : null,
-        })
-    },
-
-    getCreateActivityTrackerAdd: async (user_id, added_by, added_item, app_id) => {
-        return models.Activitytracker.create({
-            user_id: user_id,
-            activity: added_item + ' added',
-            data: added_item + ' is added by ' + added_by,
-            application_id: app_id ? app_id : null,
-        })
-    },
-
-    getCreateActivityTrackerUpdate: async (user_id, updated_by, updated_item, app_id) => {
-        return models.Activitytracker.create({
-            user_id: user_id,
-            activity: updated_item + ' updated',
-            data: updated_item + ' is updated by ' + updated_by,
-            application_id: app_id ? app_id : null,
-        })
-    },
-
-    // getCreateActivityTrackerReset: async (user_id, reset_by, reset_item, status, app_id) => {
-    //     return models.Activitytracker.create({
-    //         user_id: user_id,
-    //         activity: reset_item + ' reset',
-    //         data: reset_item + ' is reset by ' + reset_by, 
-    //         application_id: app_id ? app_id: null,
-    //     })
-    // },
-
     getActivityTrackerList: async () => {
         return models.Activitytracker.findAll({})
     },
@@ -645,24 +599,6 @@ module.exports = {
 
     },
 
-    getCreateActivityTrackerResend: async (user_id, updated_by, updated_item, app_id) => {
-        return models.Activitytracker.create({
-            user_id: user_id,
-            activity: 'Application resend',
-            data: updated_by + ' has resend the application and changed the tracker and status to ' + updated_item + ' of application no ' + app_id,
-            application_id: app_id ? app_id : null,
-        })
-    },
-
-    getCreateActivityTrackerReject: async (user_id, updated_by, updated_item, app_id) => {
-        return models.Activitytracker.create({
-            user_id: user_id,
-            activity: 'Application reject',
-            data: updated_by + ' has reject the application and changed the tracker & status to ' + updated_item + ' of application no ' + app_id,
-            application_id: app_id ? app_id : null,
-        })
-    },
-
     getResendRejectApplication: async (user_id, app_id, tracker, status) => {
         return models.Application.update({
             tracker: tracker ? tracker : null,
@@ -681,27 +617,18 @@ module.exports = {
             data
             , { where: { id: app_id } })
     },
-
-    //using for all activities trackers
-    getCreateActivityTracker: async (user_id, app_id, activity, data) => {
-        return models.Activitytracker.create({
-            user_id: user_id ? user_id : null,
-            activity: activity ? activity : null,
-            data: data ? data : null,
-            application_id: app_id ? app_id : null,
-        })
-    },
+ 
     /**Activity Tracker function */
-    activitylog: async (userId, appId, activity, data, req) => {
-        let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-        const activityTracker = await models.Activitytracker.create({
-            user_id: userId,
-            activity: activity,
-            data: data,
-            application_id: appId,
-            ip_address: ip,
-            created_at: moment()
-        })
+    activitylog: async (userId, appId, activity, data, req) => { 
+            let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+            const activityTracker = await models.Activitytracker.create({
+                user_id: userId,
+                activity: activity,
+                data: data,
+                application_id: appId,
+                ip_address: ip,
+                created_at: moment()
+            })  
     },
     /**get count of Total and filtered Application Count */
     getApplicationCount: async (tracker, status, app_id, name, email, globalSearch) => {
