@@ -3507,19 +3507,23 @@ router.get('/checkstepper_inner',middlewares.getUserInfo, async function (req, r
 					callback(null, appliedFor);
 				}
 			},
-			// function (callback) {
-			// 	obj_inner['tab9'] = false
-			// 	callback(null, appliedFor);
-			// }
 		],
 			function (err, result) {
-				console.log('*********** obj_inner ***********', obj_inner);
+				let firstFalseTab = null;
+
+				for (const tab in obj_inner) {
+					if (obj_inner.hasOwnProperty(tab) && obj_inner[tab] === false) {
+						firstFalseTab = tab;
+						break;
+					}
+				}
 				res.json({
 					status: 200,
 					message: 'Sending Tab Status',
-					data: obj_inner,
+					data: firstFalseTab,
+					step: obj_inner,
 				});
-			});
+		});
 	} 
 	else {
 		res.json({
