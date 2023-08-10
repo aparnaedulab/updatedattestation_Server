@@ -8,7 +8,6 @@ module.exports = function(sequelize, DataTypes) {
 		application_id: DataTypes.STRING(10),
 		ip_address: DataTypes.STRING(225),
 		created_at: DataTypes.DATE,
-		location: DataTypes.STRING(500),
 	});
 	return Activitytracker;
 };

@@ -216,57 +216,16 @@ module.exports = function (sequelize, DataTypes) {
 
   //new
   User.getStudentDetails = function (user_id, limit, offset, name, email, user_type, globalSearch) {
-    let LimitOffset;
-    let userType = "AND u.user_type like '%" + user_type + "%'";
-    let userId;
-    let searchName;
-    let searchSurName;
-    let searchEmail;
-    let global_Search;
-
-    if (limit == "null" && offset == "null") {
-      LimitOffset = "";
-    } else {
-      console.log('/LimitOffset////////////////')
-      LimitOffset = "LIMIT" + " " + limit + " OFFSET" + " " + offset;
-    }
-    console.log('/LimitOffset', LimitOffset);
-
-    if (user_id == "null") {
-      userId = "";
-    } else {
-      userId = "AND u.id='" + user_id + "'";
-    }
-
-    if (name == "null") {
-      searchName = "";
-      searchSurName = "";
-    } else {
-      searchEmail = "AND u.name='" + name + "'";
-      searchSurName = "AND u.surname='" + name + "'";
-    }
-
-    if (email == "null") {
-      searchEmail = "";
-    } else {
-      searchEmail = "AND u.email='" + email + "'";
-    }
-
-    if (globalSearch == "null") {
-      global_Search = "";
-    } else {
-      global_Search = "AND  CONCAT(u.name, ' ', u.surname, ' ',u.email, ' ',u.id) LIKE '%" + globalSearch + "%'";
-    }
-
-    return sequelize.query('CALL sp_studentDetails(:where_user_id, :where_email, :where_name, :where_surname, :where_user_type, :where_globalSearch, :limitOffsetVal)', {
+    console.log('############################', user_id, email, name, user_type, globalSearch, limit, offset);
+    return sequelize.query('CALL sp_studentDetails(:where_user_id, :where_email, :where_name, :where_user_type, :where_globalSearch, :limits, :offsets)', {
       replacements: {
-        where_user_id: userId ? userId : " ",
-        limitOffsetVal: LimitOffset ? LimitOffset : "",
-        where_email: searchEmail ? searchEmail : "",
-        where_name: searchName ? searchName : " ",
-        where_surname: searchSurName ? searchSurName : " ",
-        where_user_type: userType ? userType : " ",
-        where_globalSearch: global_Search ? global_Search : "",
+        where_user_id: user_id ? user_id : " ",
+        where_email: email ? email : " ",
+        where_name: name ? name : " ",
+        where_user_type: user_type ? user_type : " ",
+        where_globalSearch: globalSearch ? globalSearch : " ",
+        limits: limit ? limit : " ",
+        offsets: offset ? offset : " ",
       },
       type: sequelize.QueryTypes.RAW
     });
@@ -275,8 +234,9 @@ module.exports = function (sequelize, DataTypes) {
   User.hasOne(sequelize.models.Application);
   User.hasOne(sequelize.models.Institution_details, { foreignKey: 'user_id' });
 
-  // User.associate = (models) => {
-  // User.hasMany(models.Application);
-  // }
+  User.associate = (models) => {
+    User.hasOne(models.Applied_For_Details, { foreignKey: 'user_id' });
+  }
+
   return User;
 };

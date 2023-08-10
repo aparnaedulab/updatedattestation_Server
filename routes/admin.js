@@ -311,15 +311,20 @@ router.get('/getActivityTrackerList', async (req, res) => {
     console.log('/getActivityTrackerList');
 
     var student_id = req.query.student_id;
-    console.log('888888888888888888', student_id);
+    var offset = req.query.offset;
+    var limit = req.query.limit;
+    var globalSearch = req.query.globalSearch;
 
     if (student_id == '' || student_id == null || student_id == undefined) {
-        var trackerList = await functions.getActivityTrackerList();
-
+        var trackerList = await functions.getActivityTrackerList(offset, limit, globalSearch);
+        var trackerCount = await functions.getActivityTrackerCount(globalSearch);
+        console.log('trackerCount',trackerCount);
+        console.log('trackerList',trackerList);
         if (trackerList.length > 0) {
             return res.json({
                 status: 200,
                 data: trackerList,
+                count: trackerCount
             });
         } else {
             return res.json({
@@ -347,7 +352,7 @@ router.get('/getActivityTrackerList', async (req, res) => {
 router.get('/getStudentList', async (req, res) => {
     console.log('/getStudentList');
 
-    var user_id = req.query.id;
+    var user_id = req.query.user_id;
     var limit = req.query.limit;
     var offset = req.query.offset;
     var name = req.query.name;
@@ -355,25 +360,23 @@ router.get('/getStudentList', async (req, res) => {
     var user_type = req.query.user_type;
     var globalSearch = req.query.globalSearch;
 
-    console.log('/name', name);
-    console.log('/email', email);
-    console.log('/user_id', user_id);
-    console.log('/limit', limit);
-    console.log('/offset', offset);
-    console.log('/globalSearch', globalSearch);
-    console.log('/user_type', user_type);
-
     const data = await models.User.getStudentDetails(user_id, limit, offset, name, email, user_type, globalSearch);
-    console.log('dataaaa', data);
+    const count = await functions.getStudentCount(name, email, user_type, globalSearch);
+
+    console.log('dataaaa', JSON.stringify(data));
+    console.log('counttt', count);
 
     if (data.length > 0) {
         return res.json({
             status: 200,
             data: data,
+            count: count,
         });
     } else {
         return res.json({
             status: 400,
+            data: data,
+            count: count,
         });
     }
 
@@ -2234,7 +2237,7 @@ router.post('/updatePaymentNotes', middlewares.getUserInfo, async (req, res) =>{
     var user_name = req.User.name + ' ' + req.User.surname;
 
     var paymentIssueDetails = await functions.getPaymentIssueDetails(issue_id);
-    console.log('JJJJJJJJJJJJJJJJJJ',paymentIssueDetails);
+    console.log('JJJJJJJJJJJJJJJJJJ',notes_data);
 
     if(paymentIssueDetails){
         var updateNotes = await functions.getUpdatePaymentNotes(notes_data, tracker, issue_id);

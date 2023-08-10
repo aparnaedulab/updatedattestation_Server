@@ -235,7 +235,7 @@ router.post('/updateAllInstitute',middlewares.getUserInfo, async (req, res) => {
 	console.log('/updateAllInstitute');
 
 	var formData = req.body.formData;
-	var email = req.body.formData.emails;
+	var email = req.body.formData.allEmail;
 	var emailArr;
 	var anotherEmailArr;
 	var anotherEmail;
@@ -248,6 +248,12 @@ router.post('/updateAllInstitute',middlewares.getUserInfo, async (req, res) => {
 	var admin_id = req.body.admin_id;
 	var user_email = req.User.email;
 	var user_type = req.body.user_type;
+
+	if (app_id == 'null' || app_id == null || app_id == undefined || app_id == 'undefined' || app_id == '') {
+		app_id = null
+	} else {
+		app_id = req.query.app_id
+	}
 
 	var applied = await functions.getEducationalDetailsCount(user_id, app_id);
 
@@ -418,7 +424,7 @@ router.get('/getInstituteData',middlewares.getUserInfo, async (req, res) => {
 
 	var purpose_name = req.query.purpose_name;
 	var app_id = req.query.app_id;
-	if (app_id == 'null' || app_id == null || app_id == undefined || app_id == '') {
+	if (app_id == 'null' || app_id == null || app_id == undefined || app_id == '' || app_id == 'undefined') {
 		app_id = null
 	} else {
 		app_id = req.query.app_id
@@ -452,6 +458,8 @@ router.get('/getInstituteData',middlewares.getUserInfo, async (req, res) => {
 						lastnameaswes: institute.lastnameaswes,
 						name: institute.name,
 						user_id: institute.user_id,
+						app_id: institute.app_id,
+						other_email: institute.otherEmail,
 					})
 				});
 
@@ -492,6 +500,7 @@ router.get('/getInstituteData',middlewares.getUserInfo, async (req, res) => {
 						name: institute.name,
 						user_id: institute.user_id,
 						other_email: institute.otherEmail,
+						app_id: institute.app_id,
 					})
 				});
 
@@ -596,7 +605,7 @@ router.get('/getHrdInfo',middlewares.getUserInfo, async (req, res) => {
 			data.push({
 				faculty: item.faculty,
 				colleges: item.collegeId,
-				pattern: item.patteren,
+				pattern: item.pattern,
 				type: item.education_type + ' of ' + item.faculty,
 				fullName: user[0].name + ' ' + user[0].surname,
 				degree: degree_type,
@@ -3608,6 +3617,8 @@ router.get('/getPaymentIssueData', middlewares.getUserInfo, async (req, res) => 
 	var userId = req.User.id;
 	var user_type = req.query.user_type;
 	var tracker = req.query.tracker;
+	var filterText = req.query.filterText;
+	console.log('filterText',filterText);
 	var payerror = [];
 	try {
 		if (user_type == 'student') {
@@ -3626,7 +3637,7 @@ router.get('/getPaymentIssueData', middlewares.getUserInfo, async (req, res) => 
 						filePath: constant.BASE_URL + "/api/upload/paymentIssue/" + userId + "/" + paymenterror.file_name,
 						extension: extension,
 						fileName: paymenterror.file_name,
-						date: paymenterror.date,
+						date: paymenterror.date ? moment(new Date(paymenterror.date)).format("DD-MM-YYYY") : '',
 						transaction_id: paymenterror.transaction_id,
 						bank_refno: paymenterror.bank_refno,
 						tracker: paymenterror.tracker,
@@ -3647,12 +3658,22 @@ router.get('/getPaymentIssueData', middlewares.getUserInfo, async (req, res) => 
 				});
 			}
 		} else {
-			var user = await models.paymenterror_details.findAll({
-				where:{
-					tracker: tracker,
-				}
-			});
-
+			if(filterText){
+				var user = await models.paymenterror_details.findAll({
+					where:{
+						tracker: tracker,
+						id: filterText,
+						email: filterText,
+					}
+				});
+			}else{
+				var user = await models.paymenterror_details.findAll({
+					where:{
+						tracker: tracker,
+					}
+				});
+			}
+			
 			if (user) {
 				user.forEach(async function (paymenterror) {
 					var extension = paymenterror.file_name.split('.').pop();
@@ -3662,7 +3683,7 @@ router.get('/getPaymentIssueData', middlewares.getUserInfo, async (req, res) => 
 						filePath: constant.BASE_URL + "/api/upload/paymentIssue/" + paymenterror.user_id + "/" + paymenterror.file_name,
 						extension: extension,
 						fileName: paymenterror.file_name,
-						date: paymenterror.date,
+						date: paymenterror.date ? moment(new Date(paymenterror.date)).format("DD-MM-YYYY") : '',
 						transaction_id: paymenterror.transaction_id,
 						bank_refno: paymenterror.bank_refno,
 						tracker: paymenterror.tracker,
@@ -3672,7 +3693,6 @@ router.get('/getPaymentIssueData', middlewares.getUserInfo, async (req, res) => 
 						note: paymenterror.note,
 						email: paymenterror.email,
 						tracker: paymenterror.tracker,
-						notes: paymenterror.note,
 						admin_notes: paymenterror.admin_notes,
 					})
 				})

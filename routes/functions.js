@@ -383,12 +383,39 @@ module.exports = {
         }, { where: { id: id } })
     },
 
-    getActivityTrackerList: async () => {
-        return models.Activitytracker.findAll({})
+    getActivityTrackerList: async (offset, limit, globalSearch) => {
+        const data = {}
+        if (globalSearch) {
+            data[Op.or] = [
+                Sequelize.literal(`CONCAT(data, '', activity, '') LIKE '%${globalSearch}%'`),
+            ];
+        }
+
+        offset = parseInt(offset);
+        limit = parseInt(limit);
+
+        return models.Activitytracker.findAll({
+            where: data,
+            limit: limit,
+            offset: offset,
+        });
     },
 
     getActivityTrackerSingle: async (user_id) => {
         return models.Activitytracker.findAll({ where: { user_id: user_id } })
+    },
+
+    getActivityTrackerCount: async (globalSearch) => {
+        const data = {}
+        if (globalSearch) {
+            data[Op.or] = [
+                Sequelize.literal(`CONCAT(data, '', activity, '') LIKE '%${globalSearch}%'`),
+            ];
+        }
+
+        return models.Activitytracker.count({
+            where: data,
+        });
     },
 
     generateRandomString: function (length, charset) {
@@ -926,8 +953,48 @@ module.exports = {
 
     getUpdatePaymentNotes: async (notes_data, tracker, issue_id) => {
         return models.paymenterror_details.update({
-            note: notes_data ? notes_data : null,
+            admin_notes: notes_data ? notes_data : null,
             tracker: tracker ? tracker : null,
         }, { where: { id: issue_id } })
+    },
+
+    getStudentCount: async (name, email, user_type, globalSearch) => {
+        const user = {}
+
+        if (name) {
+            console.log('nnnnnnnnnnnnnnnn');
+            user[Op.and] = [
+                Sequelize.literal(`CONCAT(User.name, ' ',User.surname) LIKE '%${name}%'`),
+            ];
+        }
+
+        if (email) {
+            console.log('eeeeeeeeeeeeeeeee');
+            user[Op.and] = [
+                Sequelize.literal(`CONCAT(User.email, ' ') LIKE '%${email}%'`),
+            ];
+        }
+
+        if (user_type) {
+            console.log('tttttttttttttt');
+            user.user_type = user_type;
+        }
+
+        if (globalSearch) {
+            console.log('ggggggggggggg');
+            user[Op.or] = [
+                Sequelize.literal(`CONCAT(User.name, '', User.surname, '', User.email, '') LIKE '%${globalSearch}%'`),
+            ];
+        }
+
+        console.log('$$$$$$$$$$$$$$$$$$$$$$',user);
+
+        const count = models.User.count({
+            include: [{
+                model: models.Applied_For_Details,
+            }],
+            where: user,
+        });
+        return count;
     },
 };

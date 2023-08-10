@@ -277,6 +277,7 @@ var unprotected = [
   '/api/admin/resendWesApplication',
   '/api/admin/verifyApplication',
   '/api/admin/getWes_details',
+  '/api/admin/updatePaymentNotes',
 ];
 app.use(checkjwt({
   secret: cfg.jwtSecret
