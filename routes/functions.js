@@ -811,18 +811,19 @@ module.exports = {
         return wesData;
     },
     registerUser: async (formData, hashPassword) => {
-        id = models.User.create({
-            name: formData.firstName ? formData.firstName : null,
-            surname: formData.lastName ? formData.lastName : null,
-            email: formData.email ? formData.email : null,
-            mobile: formData.mobile ? formData.mobile : null,
-            mobile_country_code: formData.countryCode ? formData.countryCode : null,
-            gender: formData.gender ? formData.gender : null,
+        return models.User.create({
+            name: formData.nameCtrl ? formData.nameCtrl : null,
+            surname: formData.surnameCtrl ? formData.surnameCtrl : null,
+            email: formData.emailCtrl ? formData.emailCtrl : null,
+            mobile: formData.mobileNoCtrl ? formData.mobileNoCtrl : null,
+            mobile_country_code: formData.countryCtrl ? formData.countryCtrl : null,
+            gender: formData.genderCtrl ? formData.genderCtrl : null,
             password: hashPassword ? hashPassword : null,
             user_status: 'active',
             user_type: 'student',
             is_otp_verified: 0,
-            is_email_verified: 0
+            is_email_verified: 0,
+            postal_code: '',
         })
         console.log('ididid', id)
     },

@@ -21,6 +21,8 @@ const upload = multer({ dest: 'public/upload/marklist' });
 const tesseract = require("node-tesseract-ocr");
 const middlewares = require('../middleware');
 var self_PDF = require('./self_letter');
+const canvas = require('canvas');
+const captcha = require('node-captcha-generator');
 const config = {
 	lang: "eng",
 	oem: 1,
@@ -4202,5 +4204,49 @@ router.get('/getPostApplication', middlewares.getUserInfo, async (req, res) => {
         });
     }
 });
+
+router.get('/createCaptcha', async (req, res)=>{
+	console.log('/createCaptcha');
+
+	const { createCanvas } = canvas;
+	console.log('/cccccccccccccccccc');
+	const captchaCanvas = createCanvas(150, 50);
+	console.log('/dddddddddddddddddd');
+  
+	const captchaImage = captchaCanvas.toDataURL('image/png');
+	console.log('//////////////////',captchaImage);
+  
+	res.json({ 
+		status: 200,
+		data: captchaImage,
+		value: captchaCanvas.value,
+	});
+
+
+	// let data = new captcha({
+	// 	length: 5,
+	// 	size:({
+	// 		width: 450,
+	// 		height: 200,
+	// 	})
+	// })
+
+	// await data.toBase64(async(err, base64)=>{
+	// 	if(err){
+	// 		res.json({ 
+	// 			status: 400,
+	// 			id: 1,
+	// 			message: 'Failed to load captcha!' 
+	// 		});
+	// 	}else{
+	// 		res.json({ 
+	// 			status: 200,
+	// 			id: 1,
+	// 			data: base64,
+	// 			value: data.value,
+	// 		});
+	// 	}
+	// })
+})
 
 module.exports = router;
