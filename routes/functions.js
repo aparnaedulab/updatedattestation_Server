@@ -997,4 +997,58 @@ module.exports = {
         });
         return count;
     },
+    /**getAppliedDetails function to get the data of each table with userid and type */
+    getAppliedDetails: async (userId, tableName, type) => {
+        try {
+            const whereUser = {
+                user_id: userId
+            };
+
+            if (type !== '') {
+                whereUser.type = type;
+            }
+            const table = models[tableName];
+            const appliedDetails = await table.findOne({
+                where: whereUser
+            });
+
+            return appliedDetails;
+        } catch (error) {
+            console.error("Error in getAppliedDetails:", error);
+            throw error;
+        }
+    },
+    /**getEmailActivity function to get the data of emailActivitytracker */
+    getEmailActivity: async (globalSearch, limits, offsets) => {
+        const whereEmail = {};
+        if (globalSearch) {
+            whereEmail[Op.or] = [
+                Sequelize.literal(`CONCAT(email, ' ', subject, ' ',status) LIKE '%${globalSearch}%'`)
+            ]
+        }
+        // Convert limits and offsets to numbers
+        const parsedLimits = parseInt(limits, 10);
+        const parsedOffsets = parseInt(offsets, 10);
+
+        const emailActivity = await models.EmailActivityTracker.findAll({
+            where: whereEmail,
+            limit: parsedLimits,
+            order: [['created_at', 'DESC']],
+            offset: parsedOffsets
+        })
+        return emailActivity;
+    },
+    /**getEmailAtivityCount to get count of emailactivitytracker data */
+    getEmailActivityCount: async (globalSearch) => {
+        const whereEmail = {};
+        if (globalSearch) {
+            whereEmail[Op.or] = [
+                Sequelize.literal(`CONCAT(email, ' ', subject, ' ',status) LIKE '%${globalSearch}%'`)
+            ]
+        }
+        const emailActivityCount = await models.EmailActivityTracker.count({
+            where: whereEmail,
+        })
+        return emailActivityCount;
+    },
 };

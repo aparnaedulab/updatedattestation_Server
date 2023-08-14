@@ -2,13 +2,34 @@
 
 module.exports = function (sequelize, DataTypes) {
   var Applied_For_Details = sequelize.define("Applied_For_Details", {
-    instructionalField: DataTypes.BOOLEAN(),
-    curriculum: DataTypes.BOOLEAN(),
-    educationalDetails: DataTypes.BOOLEAN(),
-    gradToPer: DataTypes.BOOLEAN(),
-    affiliation: DataTypes.BOOLEAN(),
-    CompetencyLetter: DataTypes.BOOLEAN(),
-    LetterforNameChange: DataTypes.BOOLEAN(),
+    instructionalField: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+  },
+    curriculum : {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+  },
+    educationalDetails :  {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+  },
+    gradToPer :  {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+  },
+    affiliation :  {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+  },
+    CompetencyLetter :  {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+  },
+    LetterforNameChange :  {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+  },
     current_year: DataTypes.BOOLEAN(),
     diplomaHolder: DataTypes.BOOLEAN(),
     isphd: DataTypes.BOOLEAN(),

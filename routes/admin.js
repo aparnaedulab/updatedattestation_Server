@@ -2266,4 +2266,44 @@ router.post('/updatePaymentNotes', middlewares.getUserInfo, async (req, res) =>{
     }
 })
 
+/** getEmailActivityTracker route to get data of email activity */
+router.get('/getEmailActivityTracker', async (req, res) => {
+    try {
+        const globalSearch = req.query.globalSearch;
+        const limit = req.query.limit;
+        const offset = req.query.offset;
+        const EmailActivity = [];
+        const EmailActivityData = await functions.getEmailActivity(globalSearch, limit, offset);
+        const EmailActivityCount = await functions.getEmailActivityCount(globalSearch);
+        if (EmailActivityData && EmailActivityCount) {
+
+            for (const data of EmailActivityData) {
+                EmailActivity.push({
+                    email: data.email,
+                    subject: data.subject,
+                    status: data.status,
+                    created_at: moment(new Date(data.created_at)).format("DD/MM/YYYY"),
+                    opens_count: data.opens_count,
+                    clicks_count: data.clicks_count,
+                })
+            }
+            return res.json({
+                status: 200,
+                data: EmailActivity,
+                count: EmailActivityCount
+            })
+        }else{
+            return res.json({
+                status: 400, 
+                message:"No Data Available" ,
+            })   
+        }
+    } catch (error) {
+        console.error("Error in /getEmailActivityTracker", error);
+        return res.status(500).json({
+            message: "Internal Server Error",
+        });
+    }
+})
+
 module.exports = router;

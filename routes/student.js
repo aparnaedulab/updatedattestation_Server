@@ -4096,4 +4096,111 @@ router.get('/getDownloadPaymentReceipt', middlewares.getUserInfo, async (req, re
 	}
 })
 
+
+/**getPreApplication route  to user can see where he is in the process of filling the data*/
+router.get('/getPreApplication', middlewares.getUserInfo, async (req, res) => {
+	try {
+		const userId = req.User.id;
+
+		const appliedDetails = await functions.getAppliedDetails(userId, 'Applied_For_Details', '');
+
+		if (appliedDetails) {
+			const educationalFlag = true;
+			const [
+				transcript,
+				instructional,
+				curriculum,
+				gradToPer,
+				affiliation,
+				competency,
+				letterForNameChange
+			] = await Promise.all([
+				functions.getAppliedDetails(userId, 'User_Transcript', ''),
+				functions.getAppliedDetails(userId, 'letter_details', 'instructional'),
+				functions.getAppliedDetails(userId, 'User_Curriculum', ''),
+				functions.getAppliedDetails(userId, 'GradeToPercentageLetter', ''),
+				functions.getAppliedDetails(userId, 'letter_details', 'affiliation'),
+				functions.getAppliedDetails(userId, 'competency_letter', ''),
+				functions.getAppliedDetails(userId, 'Letterfor_NameChange', '')
+			]);
+			if ((appliedDetails.educationalDetails && transcript == null) ||
+				(appliedDetails.instructionalField && instructional == null) ||
+				(appliedDetails.curriculum && curriculum == null) ||
+				(appliedDetails.gradToPer && gradToPer == null) ||
+				(appliedDetails.affiliation && affiliation == null) ||
+				(appliedDetails.CompetencyLetter && competency == null) ||
+				(appliedDetails.LetterforNameChange && letterForNameChange == null)) {
+				documentFlag = false;
+			} else {
+				documentFlag = true;
+			}
+
+			const [
+				purposeData,
+				hrdData,
+				applicationData
+			] = await Promise.all([
+				functions.getAppliedDetails(userId, 'Institution_details', ''),
+				functions.getAppliedDetails(userId, 'Hrd_details', ''),
+				functions.getAppliedDetails(userId, 'Application', '')
+			]);
+
+			const purposeFlag = purposeData != null || hrdData != null;
+			const paymentFlag = applicationData != null;
+
+			return res.json({
+				status: 200,
+				educationDetails: educationalFlag,
+				documentDetails: documentFlag,
+				purposeDetails: purposeFlag,
+				paymentDetails: paymentFlag
+			})
+		}
+	} catch (error) {
+		console.error("Error in /getPreApplication", error);
+		return res.status(500).json({
+			message: "Internal Server Error",
+		});
+	}
+});
+
+/**getPostApplication Route to show the user after payment is application in which process*/
+router.get('/getPostApplication', middlewares.getUserInfo, async (req, res) => {
+    try {
+        const userId = req.User.id;
+
+        const applicationData = await models.Application.findOne({
+            where: {
+                user_id: userId,
+            }
+        });
+
+        const statusFlagMap = {
+            'apply:new': { pending: true },
+            'verified:accept': { pending: true, verified: true },
+            'signed:accept': { pending: true, verified: true, signed: true },
+            'done:accept': { pending: true, verified: true, signed: true, done: true },
+        };
+
+        let applicationStatus = {};
+
+        if (applicationData) {
+            const statusKey = `${applicationData.tracker}:${applicationData.status}`;
+            applicationStatus = statusFlagMap[statusKey] || {};
+        }
+
+        console.log(applicationStatus);
+        return res.json({
+            status: 200,
+            ...applicationStatus,
+        });
+
+    } catch (error) {
+        console.error("Error in /getPreApplication", error);
+        return res.status(500).json({
+            message: "Internal Server Error",
+        });
+    }
+});
+
 module.exports = router;

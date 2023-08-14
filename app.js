@@ -199,6 +199,9 @@ var unprotected = [
   '/api/student/getProfileValue',
   '/api/student/updateProfile',
   '/api/student/getDownloadPaymentReceipt',
+  '/api/student/getPreApplication',
+  '/api/student/getPostApplication',
+  '/api/admin/getEmailActivityTracker',
 
   //new students
   '/api/student/login',
