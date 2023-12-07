@@ -27,6 +27,7 @@ const config = {
 	lang: "eng",
 	oem: 1,
 	psm: 3
+	
 }
 /* Editor : Prathmesh Pawar
 Route : educationalDetails - check email and password and return token and access to proceed ahead to student.
